@@ -1,0 +1,189 @@
+---
+title: "Post Season Analysis"
+author: "Arun Ramji"
+date: "2024-10-09"
+output:
+  html_document: default
+  pdf_document: default
+---
+
+```{r setup, include=FALSE}
+library(reticulate)
+# Optionally specify the Python path if there are multiple versions
+use_python("/usr/local/bin/python3", required = TRUE)
+knitr::opts_chunk$set(warning = FALSE, message = FALSE)
+```
+```{r,echo=FALSE}
+
+# Load the dataset again, specifying the correct file path
+Data <- read.csv("/Users/arunramji/Desktop/Waterloo Wins Corr/Team Stats(Sheet1) (2).csv")
+
+
+```
+
+```{python, echo=FALSE,result = "hide",fig.show="hold"}
+import pandas as pd
+import matplotlib.pyplot as plt
+import seaborn as sns
+
+data = r.Data
+data= data[["Game.ID","XGF","XGA","XG","SF","SA","SD","A.","A..1","AD","CES","UES","UES","X","CEX","Result","PPT","SHT","ST.Imp","Controlled.Entry.Rate","OddF.60","OddA.60","OddD","NFD","NFF.60","NFA.60","CE.60","UE.60","Rush.60","Fore.60","Cycle.60","Faceoff.60"]]
+
+import matplotlib.pyplot as plt
+import seaborn as sns
+
+def build(values,y_val, title,legend = ""):
+    if isinstance(values, str):
+        values = [values]
+    if isinstance(legend, str):
+        legend = [legend]
+    
+    fig, ax1 = plt.subplots(figsize=(12, 4))
+
+ 
+
+    for val,label in zip(values,legend):
+        sns.lineplot(x=data["Game.ID"], y=data[val], ax=ax1, marker="o",              markersize = 8, label=label,linewidth =2 )
+        
+    ax1.set_xlabel("Game number",fontsize=12)
+    ax1.set_ylabel(y_val)
+
+    # Create secondary x-axis
+    ax2 = ax1.twiny()
+    ax2.set_xticks(data["Game.ID"])
+    ax2.set_xticklabels(data["Result"]) 
+    ax2.set_xlabel("Result")  # Fix: Properly set the label
+    
+    plt.title(title, fontweight="bold")
+    if len(legend) > 1:
+      plt.legend(loc="upper left", bbox_to_anchor=(1, 1)) 
+    plt.tight_layout(rect=[0, 0, 0.85, 1])
+    plt.show()
+    
+```
+Here are a bunch of graphs representing our season wide trends on all team level stats I tracked. On every X-axis you will see the game ID number (what game of the season it was as well as the result of the game. Note for result I categorized overtime games as ties.) 
+
+
+**Coaches Stats**
+
+```{python, echo=FALSE,result = "hide",fig.show="hold"}
+build(["A.","A..1","AD"],"Scoring Chances","Scoring Chances",["Scoring chances For","Scoring Chances Against"])
+
+build(["OddF.60","OddA.60"],"Odd Man Rushes","Odd Man",["Odd Man For","Odd Man Against","Odd Man Differential"])
+
+build(["NFF.60","NFA.60"],"Net Front Events","Net Front Battle",["Net Front For","Net Front Against"])
+```
+
+**Transition**
+
+```{python, echo=FALSE,result = "hide",fig.show="hold"}
+build("CE.60","Controlled Entries","Controlled Entries/60")
+build("CES","Shots","Shots per Controlled Entry")
+build("UE.60","Uncontrolled Entries","Uncontrolled Entries/60")
+build("UE.60","Shots","Shots per Uncontrolled Entry")
+build("Controlled.Entry.Rate","Rate","Controlled Entry Rate")
+build("X","Rate","Succesfful Zone Exits Rate")
+build("CEX","Rate","Controlled Exit Rate")
+
+```
+
+**O-Zone shot creation**
+on a per 60 basis (Shot levels divided by 5v5 time then multiplied by 60)
+
+```{python, echo=FALSE,result = "hide",fig.show="hold"}
+build("Rush.60","Shots","Rush Shots/60")
+build("Fore.60","Shots","Shots of the Forecheck/60")
+build("Cycle.60","Shots","Shots of the cycle/60")
+build("Faceoff.60","Shots","Shots of faceoffs/60")
+```
+
+
+## How We Scored / Got Scored On
+*(Only 5v5)*
+
+### 49 Goals For at 5v5
+- 59% of goals off a controlled entry  
+- 22% of goals off a dump-in  
+- 12% of goals off O-zone faceoffs  
+- 43% of goals off the rush  
+- 43% of goals from the forecheck  
+- 27% of goals from a net front event  
+
+### 41 Goals Against
+- 51% off controlled entries  
+- 24% off uncontrolled entries  
+- 20% off faceoffs in our zone  
+- 44% off the rush  
+- 37% off the forecheck / turnovers  
+- 37% from net front events  
+
+---
+
+
+### Correlation Analysis  
+General guidelines for interpretation are:
+
+- **0.8 – 1.0:** Very strong relationship  
+- **0.6 – 0.8:** Strong relationship  
+- **0.4 – 0.6:** Moderate relationship  
+- **0.2 – 0.4:** Weak relationship  
+- **Below 0.2:** Does not matter  
+
+
+
+
+<br>
+<br>
+
+## Points
+What stat led us to getting or not getting 2 points on a given night.
+
+```{r, echo=FALSE, fig.width=1, fig.height=8}
+knitr::include_graphics("/Users/arunramji/Desktop/Waterloo Wins Corr/pointscorr.png")
+```
+
+
+###  Takeaways
+
+- There is a strong negative correlation between goals allowed and points earned — even stronger than the correlation between goals for and points.
+- Odd-man rushes for have the highest correlation with points (outside of actual goals). This could partially be because we generate more odd-man rushes when leading, but it still highlights their importance.
+- Special teams goal differential, Grade A chances for, rush shots/60, and odd-man rush differential all show a small but noticeable relationship with points.
+- Uncontrolled entries are negatively correlated with earning points, which is an interesting and potentially actionable insight.
+
+<br>
+<br>
+
+
+
+
+
+
+## Even Strength Goals For Corr
+Normalized for even strength ice time, as this is different each game 
+
+```{r, echo=FALSE, fig.width=1, fig.height=8}
+knitr::include_graphics("/Users/arunramji/Desktop/Waterloo Wins Corr/GoalsFcorr.png")
+```
+
+
+### Takeaways
+
+- Great relationship with the Grade A chance metric we track in game, means this is a good indicator of how we played offensively (Much better then instats expected goals model which only correlates to goals 0.2% of the time much worse then NHL models that are close to 50%)
+- The other  valuable info from this is our rush offence and efficiency drives goals, with odd man rushes for, shots per controlled entry and controlled entries being some of our biggest drivers
+
+<br>
+<br>
+
+
+
+## Even Strength Goals Against Corr
+```{r, echo=FALSE, fig.width=1, fig.height=8}
+knitr::include_graphics("/Users/arunramji/Desktop/Waterloo Wins Corr/GoalsAcorr.png")
+```
+
+### Takeaways
+
+- Most important stat for us in terms of limiting goals against is, successful zone exit rate, shows our hand tracked zone exit stats are a valuable player evaluation tool
+- Interestingly controlled entries/60 and odd man rushes for are correlated with not giving up goals. This pushes back against the idea of dump-ins and not adding an extra d-man on the rush are detrimental to our defense, this is especially encouraging as those 2 stats correlate to goals for and they don't seemingly have any drawbacks. A major caveat is this is not causal so it could be that in games we give up few goals we are winning and the other team gets aggressive giving us odd man rushes the other way and controlled entries
+- No real stats that lead to us regularly giving up a lot of goals 
+
